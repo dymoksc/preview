@@ -8,6 +8,30 @@
 
 namespace web_server {
 
+template <>
+Request::Header RequestParser::parseLine(const std::string& line) const {
+  std::smatch matches;
+  if (!std::regex_match(line, matches, headerLineRegex)) {
+    throw ParsingException("Header line cannot be parsed: '"  + line + "'");
+  }
+
+  return { matches.str(1), matches.str(2) };
+}
+
+template <>
+Request::FirstLineData RequestParser::parseLine(const std::string& line) const {
+  std::smatch matches;
+  if (!std::regex_match(line, matches, firstLineRegex)) {
+    throw ParsingException("First line does not follow the expected format: '" + line + "'");
+  }
+
+  return {
+      std::find_if(supportedMethods.begin(), supportedMethods.end(), [&matches](const auto& method) { return method.second == matches.str(1); })->first,
+      matches.str(2),
+      std::find_if(supportedProtocols.begin(), supportedProtocols.end(), [&matches](const auto& protocol) { return protocol.second == matches.str(3); })->first,
+  };
+}
+
 RequestParser::RequestParser()  :
     supportedProtocols({ { Request::Protocol::HTTP_1_1, "HTTP/1.1"}, { Request::Protocol::HTTP_2, "HTTP/2" } }),
     supportedMethods({ { Request::Method::GET, "GET" }, { Request::Method::POST, "POST" } }),
@@ -30,7 +54,7 @@ Request RequestParser::parse(const std::string& rawRequest) const {
       case ParsingPhase::FirstLine: {
         std::string firstLine;
         getline(requestStream, firstLine);
-        requestBuilder.setFirstLine(parseFirstLine(firstLine));
+        requestBuilder.setFirstLine(parseLine<Request::FirstLineData>(firstLine));
         parsingPhase = ParsingPhase::Headers;
         break;
       }
@@ -41,7 +65,7 @@ Request RequestParser::parse(const std::string& rawRequest) const {
         if (headerLine.empty()) {
           parsingPhase = ParsingPhase::Body;
         } else {
-          requestBuilder.addHeader(parseHeaderLine(headerLine));
+          requestBuilder.addHeader(parseLine<Request::Header>(headerLine));
         }
         break;
       }
@@ -61,28 +85,6 @@ Request RequestParser::parse(const std::string& rawRequest) const {
   }
 
   return requestBuilder.buildRequest();
-}
-
-Request::FirstLineData RequestParser::parseFirstLine(const std::string& firstLine) const {
-  std::smatch matches;
-  if (!std::regex_match(firstLine, matches, firstLineRegex)) {
-    throw ParsingException("First line does not follow the expected format: '" + firstLine + "'");
-  }
-
-  return {
-    std::find_if(supportedMethods.begin(), supportedMethods.end(), [&matches](const auto& method) { return method.second == matches.str(1); })->first,
-    matches.str(2),
-    std::find_if(supportedProtocols.begin(), supportedProtocols.end(), [&matches](const auto& protocol) { return protocol.second == matches.str(3); })->first,
-  };
-}
-
-Request::Header RequestParser::parseHeaderLine(const std::string& headerLine) const {
-  std::smatch matches;
-  if (!std::regex_match(headerLine, matches, headerLineRegex)) {
-    throw ParsingException("Header line cannot be parsed: '"  + headerLine + "'");
-  }
-
-  return { matches.str(1), matches.str(2) };
 }
 
 }

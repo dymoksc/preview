@@ -19,12 +19,11 @@ private:
 
   const std::map<Request::Protocol, std::string> supportedProtocols;
   const std::map<Request::Method, std::string> supportedMethods;
+  const std::regex firstLineRegex;
+  const std::regex headerLineRegex;
 
-  std::regex firstLineRegex;
-  std::regex headerLineRegex;
-
-  [[nodiscard]] Request::FirstLineData parseFirstLine(const std::string& firstLine) const;
-  [[nodiscard]] Request::Header parseHeaderLine(const std::string& headerLine) const;
+  template <typename T>
+  [[nodiscard]] T parseLine(const std::string& line) const;
 };
 
 }
