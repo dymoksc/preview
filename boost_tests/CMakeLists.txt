@@ -4,9 +4,12 @@ include_directories (${Boost_INCLUDE_DIRS})
 
 # 'Boost_Tests_run' is the target name
 # 'test1.cpp tests2.cpp' are source files with tests
+include_directories(..)
+
 add_executable (
         preview_boost_tests
         web_server/RequestParserTest.cc
-        ../../web_server/RequestParser.cc
+        ../web_server/RequestParser.cc
+        ../web_server/RequestBuilder.cc
 )
 target_link_libraries (preview_boost_tests ${Boost_LIBRARIES})
