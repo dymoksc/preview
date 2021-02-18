@@ -1,10 +1,14 @@
-set (Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_STATIC_LIBS OFF)
+set(BOOST_TEST_DYN_LINK 1)
+set(BOOST_TEST_MAIN 1)
+
 find_package (Boost REQUIRED COMPONENTS unit_test_framework)
 include_directories (${Boost_INCLUDE_DIRS})
 
 # 'Boost_Tests_run' is the target name
 # 'test1.cpp tests2.cpp' are source files with tests
 include_directories(..)
+
 
 add_executable (
         preview_boost_tests
@@ -17,5 +21,5 @@ add_executable (
         web_server/UrlParserTest.cc
         ../web_server/HttpTransportEnumNames.h
         ../web_server/HttpTransportEnumNames.cc
-)
+        BoostTestOpts.cc)
 target_link_libraries (preview_boost_tests ${Boost_LIBRARIES})
