@@ -7,7 +7,6 @@ add_executable(preview main.cpp threads/ThreadPool.cc threads/ThreadPool.h web_s
 
 include_directories(.)
 include_directories(./libs)
-add_definitions(-include better-enums/enum.h)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
