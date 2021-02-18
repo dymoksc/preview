@@ -11,7 +11,7 @@
 
 namespace web_server {
 
-const char* Server::rootDir = "/home/gleb/public_html/";
+const char* Server::rootDir = "~/public_html/";
 
 Server::Server(const IRequestParser& RequestParser, const IResponsePrinter& ResponsePrinter, const IUrlParser& UrlParser) :
     requestParser(RequestParser), responsePrinter(ResponsePrinter), urlParser(UrlParser) {}
