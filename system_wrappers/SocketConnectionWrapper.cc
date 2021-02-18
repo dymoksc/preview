@@ -6,7 +6,7 @@
 
 namespace system_wrappers {
 
-SocketConnectionWrapper::SocketConnectionWrapper(int fd) : fd(fd) {}
+SocketConnectionWrapper::SocketConnectionWrapper(int fd, const sockaddr_in& clientAddr) : fd(fd), clientAddr(clientAddr) {}
 
 SocketConnectionWrapper::~SocketConnectionWrapper() {
   close(fd);
@@ -35,6 +35,10 @@ void SocketConnectionWrapper::send(const std::string& data) {
   if (::send(fd, data.c_str(), data.size(), 0) == -1) {
     throw std::runtime_error(std::string("Error in send: ") + strerror(errno));
   }
+}
+
+const sockaddr_in& SocketConnectionWrapper::getClientAddr() const {
+  return clientAddr;
 }
 
 }
