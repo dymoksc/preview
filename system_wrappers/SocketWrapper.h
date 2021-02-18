@@ -2,6 +2,7 @@
 #define PREVIEW_SOCKETWRAPPER_H
 
 #include <netinet/in.h>
+#include <memory>
 
 #include "system_wrappers/SocketConnectionWrapper.h"
 
@@ -13,7 +14,7 @@ public:
   ~SocketWrapper();
   [[nodiscard]] int getFd() const;
   sockaddr_in& getSockAddrIn();
-  SocketConnectionWrapper accept() const;
+  std::shared_ptr<SocketConnectionWrapper> accept() const;
 
 private:
   static const int port = 8080;

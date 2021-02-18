@@ -33,7 +33,8 @@ std::string SocketConnectionWrapper::receive() {
 
 void SocketConnectionWrapper::send(const std::string& data) {
   if (::send(fd, data.c_str(), data.size(), 0) == -1) {
-    throw std::runtime_error(std::string("Error in send: ") + strerror(errno));
+    char* const error = strerror(errno);
+    throw std::runtime_error(std::string("Error in send: ") + error);
   }
 }
 

@@ -48,16 +48,26 @@ int main() {
   try {
     while (!exitFlag) {
       auto epollEventsIterators = epollWrapper.wait();
+
       std::for_each(
           epollEventsIterators.first,
           epollEventsIterators.second,
-          [&socketWrapper, &injector](const epoll_event& epollEvent) -> void {
+          [&injector, &socketWrapper, &threadPool](const epoll_event& epollEvent) -> void {
             cerr << "Event on fd #" << epollEvent.data.fd << endl;
             if (epollEvent.events & EPOLLIN) {
-              system_wrappers::SocketConnectionWrapper socketConnectionWrapper = socketWrapper.accept();
-              cout << "Client connected " << inet_ntoa(socketConnectionWrapper.getClientAddr().sin_addr) << endl;
-              auto server = injector.create<std::shared_ptr<web_server::Server>>();
-              socketConnectionWrapper.send(server->getResponse(socketConnectionWrapper.receive()));
+              threadPool.addTask(
+                  [&injector](std::shared_ptr<system_wrappers::SocketConnectionWrapper> socketConnectionWrapper) -> void {
+                    cerr << "Client connected " << inet_ntoa(socketConnectionWrapper->getClientAddr().sin_addr) << endl;
+                    auto server = injector.create<web_server::Server>();
+                    cerr << "Server created" << endl;
+                    std::string rawRequest = socketConnectionWrapper->receive();
+                    cerr << rawRequest << endl;
+                    const std::string& rawResponse = server.getResponse(rawRequest);
+                    cerr << rawResponse;
+                    socketConnectionWrapper->send(rawResponse);
+                  },
+                  socketWrapper.accept()
+              );
             }
           }
       );
@@ -69,23 +79,7 @@ int main() {
   }
 
   cerr << "Exiting..." << endl;
-
-  // auto start = high_resolution_clock::now();
-  //
-  // {
-  //   threads::ThreadPool threadPool(10);
-  //   for (int i = 0; i < 3; ++i) {
-  //     threadPool.addTask([]() -> void {
-  //       cout << std::this_thread::get_id() << " in\n";
-  //       std::this_thread::sleep_for(1s);
-  //       cout << std::this_thread::get_id() << " out\n";
-  //     });
-  //   }
-  //   threadPool.waitForAllTasks();
-  // }
-  //
-  // auto finish = high_resolution_clock::now();
-  // cout << "Execution time: " << duration_cast<milliseconds>(finish - start).count() << "ms" << endl;
+  threadPool.waitForAllTasks();
 
   return 0;
 }

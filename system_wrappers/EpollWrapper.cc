@@ -22,7 +22,11 @@ EpollWrapper::~EpollWrapper() {
 
 std::pair<const epoll_event*, const epoll_event*> EpollWrapper::wait() {
   int readyDescriptorsCount;
-  if ((readyDescriptorsCount = epoll_wait(fd, epollEvents, maxEvents, -1)) == -1) {
+  do {
+    readyDescriptorsCount = epoll_wait(fd, epollEvents, maxEvents, -1);
+  } while (readyDescriptorsCount == -1 && errno == EINTR);
+
+  if (readyDescriptorsCount == -1) {
     throw std::runtime_error(std::string("Error in epoll_wait: ") + strerror(errno));
   }
 

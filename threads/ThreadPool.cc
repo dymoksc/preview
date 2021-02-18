@@ -18,14 +18,8 @@ ThreadPool::~ThreadPool() {
   }
 }
 
-void ThreadPool::addTask(const std::function<void()>& task) {
-  std::lock_guard<std::mutex> lockGuard(tasksMutex);
-  tasks.push_back(task);
-  std::cout << "Added task. Tasks count: " << tasks.size() << std::endl;
-}
-
 void ThreadPool::loop() {
-  std::function<void()>* task = nullptr;
+  std::function<void()> task = nullptr;
 
   while (true) {
     if (exitLoop) {
@@ -35,16 +29,13 @@ void ThreadPool::loop() {
     {
       std::lock_guard<std::mutex> lockGuard(tasksMutex);
       if (!tasks.empty()) {
-        task = new std::function<void()>(tasks.back());
-        tasks.pop_back();
-
-        std::cout << std::this_thread::get_id() << " took task. " << tasks.size() << " tasks left" << std::endl;
+        task = tasks.front();
+        tasks.pop();
       }
     }
 
-    if (task != nullptr) {
-      (*task)();
-      delete task;
+    if (task) {
+      task();
       task = nullptr;
     }
   }

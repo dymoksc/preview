@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <memory>
 
 namespace system_wrappers {
 
@@ -42,7 +43,7 @@ sockaddr_in& SocketWrapper::getSockAddrIn() {
   return sockAddrIn;
 }
 
-SocketConnectionWrapper SocketWrapper::accept() const {
+std::shared_ptr<SocketConnectionWrapper> SocketWrapper::accept() const {
   static socklen_t clientAddrLength = sizeof(sockaddr_in);
   sockaddr_in clientAddr = {};
   int acceptedSocketFd;
@@ -50,7 +51,7 @@ SocketConnectionWrapper SocketWrapper::accept() const {
     throw std::runtime_error(std::string("Error in accept: ") + strerror(errno));
   }
 
-  return SocketConnectionWrapper(acceptedSocketFd, clientAddr);
+  return std::make_shared<SocketConnectionWrapper>(acceptedSocketFd, clientAddr);
 }
 
 }
