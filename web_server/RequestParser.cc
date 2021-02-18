@@ -19,25 +19,31 @@ Request::Header RequestParser::parseLine(const std::string& line) const {
 }
 
 template <>
-Request::FirstLineData RequestParser::parseLine(const std::string& line) const {
+Request::RequestLineData RequestParser::parseLine(const std::string& line) const {
   std::smatch matches;
   if (!std::regex_match(line, matches, firstLineRegex)) {
     throw ParsingException("First line does not follow the expected format: '" + line + "'");
   }
 
   return {
-      std::find_if(supportedMethods.begin(), supportedMethods.end(), [&matches](const auto& method) { return method.second == matches.str(1); })->first,
+      std::find_if(
+          httpTransportEnumNames.requestMethodNames.begin(),
+          httpTransportEnumNames.requestMethodNames.end(),
+          [&matches](const auto& method) { return method.second == matches.str(1); }
+      )->first,
       matches.str(2),
-      std::find_if(supportedProtocols.begin(), supportedProtocols.end(), [&matches](const auto& protocol) { return protocol.second == matches.str(3); })->first,
+      std::find_if(
+          httpTransportEnumNames.protocolNames.begin(),
+          httpTransportEnumNames.protocolNames.end(),
+          [&matches](const auto& protocol) { return protocol.second == matches.str(3); }
+      )->first,
   };
 }
 
 RequestParser::RequestParser()  :
-    supportedProtocols({ { Request::Protocol::HTTP_1_1, "HTTP/1.1"}, { Request::Protocol::HTTP_2, "HTTP/2" } }),
-    supportedMethods({ { Request::Method::GET, "GET" }, { Request::Method::POST, "POST" } }),
     firstLineRegex([this]() -> std::regex {
-      const std::string& methodsRegexp = boost::algorithm::join(supportedMethods | boost::adaptors::map_values, "|");
-      const std::string& protocolsRegexp = boost::algorithm::join(supportedProtocols | boost::adaptors::map_values, "|");
+      const std::string& methodsRegexp = boost::algorithm::join(httpTransportEnumNames.requestMethodNames | boost::adaptors::map_values, "|");
+      const std::string& protocolsRegexp = boost::algorithm::join(httpTransportEnumNames.protocolNames | boost::adaptors::map_values, "|");
 
       return std::regex("^(" + methodsRegexp + ") (.+) (" + protocolsRegexp + ")");
     }()),
@@ -54,7 +60,7 @@ Request RequestParser::parse(const std::string& rawRequest) const {
       case ParsingPhase::FirstLine: {
         std::string firstLine;
         getline(requestStream, firstLine);
-        requestBuilder.setFirstLine(parseLine<Request::FirstLineData>(firstLine));
+        requestBuilder.setFirstLine(parseLine<Request::RequestLineData>(firstLine));
         parsingPhase = ParsingPhase::Headers;
         break;
       }

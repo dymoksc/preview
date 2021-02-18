@@ -6,6 +6,8 @@
 #include <regex>
 #include <map>
 
+#include "web_server/HttpTransportEnumNames.h"
+
 namespace web_server {
 
 class RequestParser : public IRequestParser {
@@ -17,8 +19,7 @@ public:
 private:
   enum class ParsingPhase { FirstLine, Headers, Body, Finished };
 
-  const std::map<Request::Protocol, std::string> supportedProtocols;
-  const std::map<Request::Method, std::string> supportedMethods;
+  const HttpTransportEnumNames httpTransportEnumNames;
   const std::regex firstLineRegex;
   const std::regex headerLineRegex;
 

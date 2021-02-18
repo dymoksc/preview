@@ -1,16 +1,17 @@
 #ifndef PREVIEW_REQUESTBUILDER_H
 #define PREVIEW_REQUESTBUILDER_H
 
-#include "web_server/container/Request.h"
+#include "IRequestBuilder.h"
 
 namespace web_server {
 
-class RequestBuilder {
+class RequestBuilder : public IRequestBuilder {
 public:
-  void setFirstLine(const Request::FirstLineData& firstLine);
-  void addHeader(const Request::Header& header);
-  void setBody(const Request::Body& body);
-  [[nodiscard]] Request buildRequest() const;
+  ~RequestBuilder() override = default;
+  void setFirstLine(const Request::RequestLineData& firstLine) override;
+  void addHeader(const Request::Header& header) override;
+  void setBody(const Request::Body& body) override;
+  [[nodiscard]] Request buildRequest() const override;
 
 private:
   Request::Method requestMethod = Request::Method::GET;

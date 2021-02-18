@@ -2,7 +2,7 @@
 
 namespace web_server {
 
-void RequestBuilder::setFirstLine(const web_server::Request::FirstLineData& firstLine) {
+void RequestBuilder::setFirstLine(const web_server::Request::RequestLineData& firstLine) {
   requestMethod = firstLine.method;
   requestUrl = firstLine.url;
   requestProtocol = firstLine.protocol;
