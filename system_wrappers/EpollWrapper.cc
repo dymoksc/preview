@@ -1,5 +1,7 @@
 #include "EpollWrapper.h"
 
+#include <cstring>
+#include <stdexcept>
 #include <unistd.h>
 
 namespace system_wrappers {
@@ -22,9 +24,7 @@ EpollWrapper::~EpollWrapper() {
 
 std::pair<const epoll_event*, const epoll_event*> EpollWrapper::wait() {
   int readyDescriptorsCount;
-  do {
-    readyDescriptorsCount = epoll_wait(fd, epollEvents, maxEvents, -1);
-  } while (readyDescriptorsCount == -1 && errno == EINTR);
+  readyDescriptorsCount = epoll_wait(fd, epollEvents, maxEvents, -1);
 
   if (readyDescriptorsCount == -1) {
     throw std::runtime_error(std::string("Error in epoll_wait: ") + strerror(errno));

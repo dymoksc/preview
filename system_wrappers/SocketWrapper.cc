@@ -1,5 +1,7 @@
 #include "SocketWrapper.h"
 
+#include <cstring>
+#include <stdexcept>
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <unistd.h>

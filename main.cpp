@@ -5,6 +5,7 @@
 #include <sys/epoll.h>
 #include <libs/di/include/boost/di.hpp>
 
+#include "definitions.h"
 #include "system_wrappers/EpollWrapper.h"
 #include "system_wrappers/SocketConnectionWrapper.h"
 #include "system_wrappers/SocketWrapper.h"
@@ -16,8 +17,6 @@
 #include "web_server/ResponsePrinter.h"
 #include "web_server/Server.h"
 #include "web_server/UrlParser.h"
-
-#define THREADS_COUNT 3
 
 using std::cout;
 using std::cerr;
@@ -45,9 +44,10 @@ int main() {
 
   cerr << "Entering the main loop..." << endl;
   std::signal(SIGTERM, [](int) { exitFlag = true; });
-  try {
-    while (!exitFlag) {
-      auto epollEventsIterators = epollWrapper.wait();
+  std::pair<const epoll_event*, const epoll_event*> epollEventsIterators;
+  while (!exitFlag) {
+    try {
+      epollEventsIterators = epollWrapper.wait();
 
       std::for_each(
           epollEventsIterators.first,
@@ -71,10 +71,10 @@ int main() {
             }
           }
       );
-    }
-  } catch (const std::runtime_error& e) {
-    if (!exitFlag) {
-      throw e;
+    } catch (const std::runtime_error& e) {
+      if (!exitFlag) {
+        throw e;
+      }
     }
   }
 

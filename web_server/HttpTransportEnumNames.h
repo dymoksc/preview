@@ -12,6 +12,7 @@ namespace web_server {
 
 class HttpTransportEnumNames {
 public:
+  const std::map<common::Protocol, std::string> protocolNamesRegex;
   const std::map<common::Protocol, std::string> protocolNames;
   const std::map<Request::Method, std::string> requestMethodNames;
   const std::map<Response::StatusCode, std::string> statusReasonMessages;

@@ -43,11 +43,11 @@ Request::RequestLineData RequestParser::parseLine(const std::string& line) const
 RequestParser::RequestParser()  :
     firstLineRegex([this]() -> std::regex {
       const std::string& methodsRegexp = boost::algorithm::join(httpTransportEnumNames.requestMethodNames | boost::adaptors::map_values, "|");
-      const std::string& protocolsRegexp = boost::algorithm::join(httpTransportEnumNames.protocolNames | boost::adaptors::map_values, "|");
+      const std::string& protocolsRegexp = boost::algorithm::join(httpTransportEnumNames.protocolNamesRegex | boost::adaptors::map_values, "|");
 
-      return std::regex("^(" + methodsRegexp + ") (.+) (" + protocolsRegexp + ")");
+      return std::regex("^(" + methodsRegexp + ") (.+) (" + protocolsRegexp + ")\r?");
     }()),
-    headerLineRegex("^(.+?):\\s*(.+)") {}
+    headerLineRegex("^(.+?):\\s*(.+)\r?") {}
 
 Request RequestParser::parse(const std::string& rawRequest) const {
   ParsingPhase parsingPhase = ParsingPhase::FirstLine;
@@ -68,7 +68,7 @@ Request RequestParser::parse(const std::string& rawRequest) const {
       case ParsingPhase::Headers: {
         std::string headerLine;
         getline(requestStream, headerLine);
-        if (headerLine.empty()) {
+        if (headerLine.empty() || headerLine == "\r") {
           parsingPhase = ParsingPhase::Body;
         } else {
           requestBuilder.addHeader(parseLine<Request::Header>(headerLine));

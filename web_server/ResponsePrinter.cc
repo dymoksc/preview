@@ -14,7 +14,9 @@ std::string web_server::ResponsePrinter::print(const web_server::Response& respo
     responseStream << header.first << ": " << header.second << "\r\n";
   }
 
- responseStream << (!response.body.empty() ? "\r\n" + response.body : "");
+  if (!response.body.empty()) {
+    responseStream << "\r\n" << response.body;
+  }
 
   return responseStream.str();
 }

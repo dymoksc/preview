@@ -4,6 +4,7 @@
 #include <sstream>
 #include <thread>
 
+#include "definitions.h"
 #include "web_server/IRequestParser.h"
 #include "web_server/IResponsePrinter.h"
 #include "web_server/IUrlParser.h"
@@ -11,7 +12,7 @@
 
 namespace web_server {
 
-const char* Server::rootDir = "~/public_html/";
+const char* Server::rootDir = WEB_ROOT;
 
 Server::Server(const IRequestParser& RequestParser, const IResponsePrinter& ResponsePrinter, const IUrlParser& UrlParser) :
     requestParser(RequestParser), responsePrinter(ResponsePrinter), urlParser(UrlParser) {}

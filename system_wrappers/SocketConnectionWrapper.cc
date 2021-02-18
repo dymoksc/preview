@@ -1,7 +1,9 @@
 #include "SocketConnectionWrapper.h"
 
+#include <cstring>
 #include <unistd.h>
 #include <sstream>
+#include <stdexcept>
 #include <sys/socket.h>
 
 namespace system_wrappers {
