@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <thread>
 
 #include "web_server/IRequestParser.h"
 #include "web_server/IResponsePrinter.h"
@@ -16,10 +17,9 @@ Server::Server(const IRequestParser& RequestParser, const IResponsePrinter& Resp
     requestParser(RequestParser), responsePrinter(ResponsePrinter), urlParser(UrlParser) {}
 
 template<>
-Response Server::process<Request::Method::GET>(const Request& request) const {
+void Server::process<Request::Method::GET>(const Request& request, ResponseBuilder& responseBuilder) const {
   const std::string& path = urlParser.getPath(request.url);
   std::ifstream inputFileStream(rootDir + path);
-  ResponseBuilder responseBuilder;
   responseBuilder.setProtocol(request.protocol);
   if (inputFileStream.good()) {
     responseBuilder.setStatusCode(Response::StatusCode::Ok);
@@ -32,23 +32,37 @@ Response Server::process<Request::Method::GET>(const Request& request) const {
     responseBuilder.addHeader({ "Content-Type", "text/plain; charset=utf-8" });
     responseBuilder.setBody("Page was not found\n");
   }
-
-  return responseBuilder.buildResponse();
 }
 
 Response Server::process(const Request& request) const {
+  ResponseBuilder responseBuilder;
+  responseBuilder.addHeader(
+      {
+        "X-Thread",
+        []() -> std::string {
+          std::stringstream ss;
+          ss << std::this_thread::get_id();
+
+          return ss.str();
+        }()
+      }
+  );
+
   switch (request.method) {
     case Request::Method::GET:
-      return process<Request::Method::GET>(request);
+      process<Request::Method::GET>(request, responseBuilder);
+      break;
 
-    default:
-      return ResponseBuilder()
+    default: {
+      responseBuilder
         .setProtocol(request.protocol)
         .setStatusCode(Response::StatusCode::MethodNotAllowed)
         .addHeader({ "Content-Type", "text/plain; charset=utf-8" })
-        .setBody("Method is not supported")
-        .buildResponse();
+        .setBody("Method is not supported");
+    }
   }
+
+  return responseBuilder.buildResponse();
 }
 
 std::string Server::getResponse(const std::string& rawRequest) const {

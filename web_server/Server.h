@@ -5,6 +5,7 @@
 
 #include "web_server/container/Response.h"
 #include "web_server/container/Request.h"
+#include "ResponseBuilder.h"
 
 namespace web_server {
 
@@ -25,7 +26,7 @@ private:
   const IUrlParser& urlParser;
 
   template <Request::Method method>
-  [[nodiscard]] Response process(const Request& request) const;
+  void process(const Request& request, ResponseBuilder& responseBuilder) const;
   [[nodiscard]] Response process(const Request& request) const;
 };
 
