@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <arpa/inet.h>
+#include <csignal>
 #include <sys/epoll.h>
 #include <libs/di/include/boost/di.hpp>
 
@@ -22,6 +23,8 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
+volatile bool exitFlag = false;
+
 int main() {
   cerr << "Loading DI definitions..." << endl;
   const auto injector = boost::di::make_injector(
@@ -41,12 +44,14 @@ int main() {
   system_wrappers::EpollWrapper epollWrapper(socketWrapper.getFd());
 
   cerr << "Entering the main loop..." << endl;
-  while (true) {
-    auto epollEventsIterators = epollWrapper.wait();
-    std::for_each(
-        epollEventsIterators.first,
-        epollEventsIterators.second,
-        [&socketWrapper, &injector](const epoll_event& epollEvent) -> void {
+  std::signal(SIGTERM, [](int) { exitFlag = true; });
+  try {
+    while (!exitFlag) {
+      auto epollEventsIterators = epollWrapper.wait();
+      std::for_each(
+          epollEventsIterators.first,
+          epollEventsIterators.second,
+          [&socketWrapper, &injector](const epoll_event& epollEvent) -> void {
             cerr << "Event on fd #" << epollEvent.data.fd << endl;
             if (epollEvent.events & EPOLLIN) {
               system_wrappers::SocketConnectionWrapper socketConnectionWrapper = socketWrapper.accept();
@@ -54,9 +59,16 @@ int main() {
               auto server = injector.create<std::shared_ptr<web_server::Server>>();
               socketConnectionWrapper.send(server->getResponse(socketConnectionWrapper.receive()));
             }
-        }
-    );
+          }
+      );
+    }
+  } catch (const std::runtime_error& e) {
+    if (!exitFlag) {
+      throw e;
+    }
   }
+
+  cerr << "Exiting..." << endl;
 
   // auto start = high_resolution_clock::now();
   //
