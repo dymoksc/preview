@@ -117,9 +117,8 @@ int main() {
           }
         }
 
-        auto server = injector.create<web_server::Server>();
-        std::string request = inputStream.str();
-        std::string response = server.getResponse(request);
+        auto server = injector.create<std::shared_ptr<web_server::Server>>();
+        std::string response = server->getResponse(inputStream.str());
         send(acceptedSocketFd, response.c_str(), response.size(), 0);
 
         close(acceptedSocketFd);
