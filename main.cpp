@@ -8,6 +8,7 @@
 #include <libs/di/include/boost/di.hpp>
 
 #include "system_wrappers/EpollWrapper.h"
+#include "system_wrappers/SocketConnectionWrapper.h"
 #include "threads/ThreadPool.h"
 #include "web_server/IRequestParser.h"
 #include "web_server/IResponsePrinter.h"
@@ -19,7 +20,6 @@
 
 #define PORT 8080
 #define MAX_CONNECTIONS_IN_QUEUE 3
-#define BUFFER_SIZE 9
 #define THREADS_COUNT 3
 
 using std::cout;
@@ -68,10 +68,6 @@ int main() {
 
   cerr << "Entering the main loop..." << endl;
   while (true) {
-    // if ((readyDescriptorsCount = epoll_wait(epollFd, currentEvents, MAX_EPOLL_EVENTS, -1)) == -1) {
-    //   throw std::runtime_error(std::string("Error in epoll_wait: ") + strerror(errno));
-    // }
-
     auto epollEventsIterators = epollWrapper.wait();
     std::for_each(
         epollEventsIterators.first,
@@ -86,28 +82,15 @@ int main() {
               if ((acceptedSocketFd = accept(socketFd, reinterpret_cast<sockaddr*>(&sockAddrIn), &clientAddrLength)) == -1) {
                 throw std::runtime_error(std::string("Error in accept: ") + strerror(errno));
               }
+              system_wrappers::SocketConnectionWrapper socketConnectionWrapper(acceptedSocketFd);
 
               cout << "Client connected " << inet_ntoa(clientAddr.sin_addr) << endl;
 
-              char buffer[BUFFER_SIZE];
-              std::stringstream inputStream;
-              int readingResult;
-              while ((readingResult = recv(acceptedSocketFd, buffer, BUFFER_SIZE, 0)) != 0) {
-                if (readingResult == -1) {
-                  throw std::runtime_error("Error in recv");
-                }
-
-                if (readingResult != BUFFER_SIZE) {
-                  inputStream << std::string(std::begin(buffer), std::begin(buffer) + readingResult);
-                  break;
-                } else {
-                  inputStream << buffer;
-                }
-              }
-
               auto server = injector.create<std::shared_ptr<web_server::Server>>();
-              std::string response = server->getResponse(inputStream.str());
-              send(acceptedSocketFd, response.c_str(), response.size(), 0);
+
+              std::string request = socketConnectionWrapper.receive();
+              std::string response = server->getResponse(request);
+              socketConnectionWrapper.send(response);
 
               close(acceptedSocketFd);
             }
