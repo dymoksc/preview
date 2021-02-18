@@ -6,8 +6,8 @@
 
 namespace web_server::common {
 
-typedef std::pair<std::string, std::string> Header;
 typedef std::map<std::string, std::string> Headers;
+typedef std::map<std::string, std::string>::value_type Header;
 
 }
 
