@@ -11,5 +11,11 @@ add_executable (
         web_server/RequestParserTest.cc
         ../web_server/RequestParser.cc
         ../web_server/RequestBuilder.cc
+        ../web_server/IUrlParser.h
+        ../web_server/UrlParser.h
+        ../web_server/UrlParser.cc
+        web_server/UrlParserTest.cc
+        ../web_server/HttpTransportEnumNames.h
+        ../web_server/HttpTransportEnumNames.cc
 )
 target_link_libraries (preview_boost_tests ${Boost_LIBRARIES})

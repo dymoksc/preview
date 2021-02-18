@@ -4,21 +4,20 @@
 #include <string>
 
 #include "web_server/container/Header.h"
+#include "web_server/container/Protocol.h"
 
 namespace web_server {
 
-BETTER_ENUM(RequestMethod, int, GET, POST)
-BETTER_ENUM(RequestProtocol, int, HTTP_1_1, HTTP_2)
-
 struct Request {
-  typedef RequestMethod Method;
   typedef std::string Url;
-  typedef RequestProtocol Protocol;
+  typedef common::Protocol Protocol;
   typedef common::Header Header;
   typedef common::Headers Headers;
   typedef std::string Body;
 
-  struct FirstLineData {
+  enum class Method { GET, POST };
+
+  struct RequestLineData {
     const Method method;
     const Url url;
     const Protocol protocol;

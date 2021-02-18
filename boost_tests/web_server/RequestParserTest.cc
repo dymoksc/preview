@@ -1,11 +1,27 @@
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MAIN  // in only one cpp file
-
-#include "web_server/RequestParser.h"
+#define BOOST_TEST_MAIN
 
 #include <boost/test/unit_test.hpp>
 
+#include "web_server/HttpTransportEnumNames.h"
 #include "web_server/ParsingException.h"
+#include "web_server/RequestParser.h"
+
+namespace web_server {
+
+std::ostream& operator<<(std::ostream& os, web_server::Request::Method method) {
+  return os << web_server::HttpTransportEnumNames().requestMethodNames.at(method);
+}
+
+namespace common {
+
+std::ostream& operator<<(std::ostream& os, web_server::common::Protocol protocol) {
+  return os << web_server::HttpTransportEnumNames().protocolNames.at(protocol);
+}
+
+}
+
+}
 
 namespace {
 
@@ -15,9 +31,9 @@ BOOST_AUTO_TEST_CASE(testParsePositive) {
   web_server::RequestParser requestParser;
   const web_server::Request& parsedRequest = requestParser.parse("POST http://localhost:80/abs.html HTTP/1.1\n\npost_data");
 
-  BOOST_CHECK_EQUAL(+web_server::RequestMethod::POST, parsedRequest.method);
+  BOOST_CHECK_EQUAL(web_server::Request::Method::POST, parsedRequest.method);
   BOOST_CHECK_EQUAL("http://localhost:80/abs.html", parsedRequest.url);
-  BOOST_CHECK_EQUAL(+web_server::RequestProtocol::HTTP_1_1, parsedRequest.protocol);
+  BOOST_CHECK_EQUAL(web_server::Request::Protocol::HTTP_1_1, parsedRequest.protocol);
   BOOST_CHECK_EQUAL("post_data", parsedRequest.body);
 }
 
